@@ -95,3 +95,51 @@ def plot_state_summary(state, days_smooth=7, format_yaxis=True):
     return fig
 
 
+def plot_benford_breakdown(df_input, column='positiveIncrease'):
+    '''
+    Description
+    -----------
+        Generates a plot showing the fraction of entries of `column`
+        in `df_input` that begin with each leading digit of (1-9)
+
+    Parameters
+    ----------
+        df_input : pandas.DataFrame
+            Dataframe containing the data (duh)
+
+        column : str
+            Name of column to analyze
+    '''
+
+    if column not in df_input.columns:
+        raise IOError('Column "%s" not found in input dataframe' % column)
+
+    ###  ignoring values of 0 and NaN
+    df_input = df_input.query('%s!=0' % column).dropna(subset=[column])
+
+    ###  extracting leading digits
+    leading_digits = df_input[column].apply(lambda val: int(str(val)[0])).values
+
+    ###  counting frequencies
+    counts = numpy.array([(leading_digits==i).sum() for i in range(1,10)])
+
+
+    fig, ax = pyplot.subplots()
+    ax.set_xlabel('Leading Digit', size=14)
+    ax.set_ylabel('Fraction of total', size=14)
+
+    ax.grid(color='gray', lw=1, ls=':')
+
+    ax.errorbar(range(1,10), counts/counts.sum(), yerr=counts**0.5/counts.sum(), ls='-', marker='o', ms=9, color='g', mfc='none', mec='g', mew=2, ecolor='g', elinewidth=2, capsize=0)
+
+    ax.plot(range(1,10), utils.benford_probabilities(), ls='-', lw=3, dashes=[4,1], color='r', label="Benford's Law")
+
+    return fig
+
+
+
+
+
+
+
+

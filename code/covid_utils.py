@@ -6,7 +6,6 @@ import json
 import numpy
 import pandas
 import datetime
-import subprocess
 import matplotlib
 from matplotlib import pyplot
 
@@ -18,6 +17,14 @@ URL_GITHUB = 'https://github.com/tomczak724'
 INFO_STATES = json.load(open('../data/info_states.json', 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
 
+
+
+def benford_probabilities(n=10):
+    '''
+    Returns the Benford probabilities for each leading digit of the given base
+    '''
+    return numpy.log(1 + 1 / numpy.arange(1, n)) / numpy.log(n)
+    
 
 def load_df_us(remove_negative_cases_deaths=True):
     '''
@@ -87,5 +94,30 @@ def load_df_state(state, remove_negative_cases_deaths=True):
             df_data.loc[ii_neg, col] = numpy.nan
 
     return df_data
+
+
+def load_df_all_states(remove_negative_cases_deaths=True, verbose=True):
+    '''
+    Description
+    -----------
+        Loads all time series data for all states into one dataframe
+    '''
+
+    list_df_states = []
+    for idx, state in DF_INFO_STATES.iterrows():
+        if verbose == True:
+            sys.stdout.write('\rLOADING DATA FOR %s (%i%%)' % (state['state'], 100.*(idx+1)/len(INFO_STATES)))
+
+        list_df_states.append(load_df_state(state['state'], remove_negative_cases_deaths=remove_negative_cases_deaths))
+
+    if verbose == True:
+        print('')
+
+    df_all_states = pandas.concat(list_df_states).reset_index(drop=True)
+    return df_all_states
+
+
+
+
 
 
