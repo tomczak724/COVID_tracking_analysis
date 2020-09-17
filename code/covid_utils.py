@@ -6,15 +6,25 @@ import json
 import numpy
 import pandas
 import datetime
+import subprocess
 import matplotlib
 from matplotlib import pyplot
 
 DATA_PATH = os.path.join('..', 'data')
+if not os.path.exists(DATA_PATH):
+    os.mkdir(DATA_PATH)
 
 URL_API = 'https://api.covidtracking.com'
 URL_GITHUB = 'https://github.com/tomczak724'
 
-INFO_STATES = json.load(open('../data/info_states.json', 'r'))
+###  downloading meta data for states
+fname_info_states = '../data/info_states.json'
+if not os.path.exists(fname_info_states):
+    cmd = 'curl -O --silent https://api.covidtracking.com/v1/states/info.json'
+    subprocess.call(cmd, shell=True)
+    os.rename('info.json', fname_info_states)
+
+INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
 
 
