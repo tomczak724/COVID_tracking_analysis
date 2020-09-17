@@ -13,6 +13,37 @@ from matplotlib import pyplot
 import covid_utils as utils
 
 
+def main():
+
+    ###  plot summary of data for USA
+    choice_run_us_summary = input('\nPlot data summary for USA? [y/N] ')
+    if choice_run_us_summary.lower() in ['yes', 'y']:
+        return plot_usa_summary()
+
+
+    ###  plot summary of data for state
+    choice_run_ma_summary = input('Plot data summary for Massachusetts? [y/N] ')
+    if choice_run_ma_summary.lower() in ['yes', 'y']:
+        return plot_state_summary('ma')
+
+
+    ###  plot example 1 of Benford breakdown
+    choice_run_benford_breakdown_1 = input('Plot example 1 Benford analysis? [y/N] ')
+    if choice_run_benford_breakdown_1.lower() in ['yes', 'y']:
+        df_us = utils.load_df_us()
+        return plot_benford_breakdown(df_us, column='positive', data_label='cumulative # cases', legend_title='Data for USA')
+
+
+    ###  plot example 2 of Benford breakdown
+    choice_run_benford_breakdown_2 = input('Plot example 2 Benford analysis? [y/N] ')
+    if choice_run_benford_breakdown_2.lower() in ['yes', 'y']:
+        df_ma = utils.load_df_state('ma')
+        return plot_benford_breakdown(df_ma, column='deathIncrease', data_label='# deaths per day', legend_title='Data for Massachusetts')
+
+
+
+
+
 
 def plot_usa_summary(days_smooth=7):
     '''
@@ -24,8 +55,8 @@ def plot_usa_summary(days_smooth=7):
     fig, (ax1, ax2) = pyplot.subplots(ncols=2, figsize=(10.5, 5), sharex=True)
     fig.subplots_adjust(left=0.08, top=0.91, right=0.98, bottom=0.15, wspace=0.2)
 
-    ax1.set_title('# New Cases per day', size=16)
-    ax2.set_title('# Deaths per day', size=16)
+    ax1.set_title('# New Cases per day in USA', size=16)
+    ax2.set_title('# Deaths per day in USA', size=16)
 
     dt = pandas.Timedelta('%iD'%days_smooth)
 
@@ -95,7 +126,7 @@ def plot_state_summary(state, days_smooth=7, format_yaxis=True):
     return fig
 
 
-def plot_benford_breakdown(df_input, column='positiveIncrease'):
+def plot_benford_breakdown(df_input, column='positiveIncrease', data_label='# new cases per day', legend_title=''):
     '''
     Description
     -----------
@@ -123,23 +154,24 @@ def plot_benford_breakdown(df_input, column='positiveIncrease'):
     ###  counting frequencies
     counts = numpy.array([(leading_digits==i).sum() for i in range(1,10)])
 
-
+    ###  initializing figure
     fig, ax = pyplot.subplots()
     ax.set_xlabel('Leading Digit', size=14)
     ax.set_ylabel('Fraction of total', size=14)
 
     ax.grid(color='gray', lw=1, ls=':')
 
-    ax.errorbar(range(1,10), counts/counts.sum(), yerr=counts**0.5/counts.sum(), ls='-', marker='o', ms=9, color='g', mfc='none', mec='g', mew=2, ecolor='g', elinewidth=2, capsize=0)
+    ax.errorbar(range(1,10), counts/counts.sum(), yerr=counts**0.5/counts.sum(), ls='-', marker='o', ms=9, color='g', mfc='none', mec='g', mew=2, ecolor='g', elinewidth=2, capsize=0, label=data_label)
 
     ax.plot(range(1,10), utils.benford_probabilities(), ls='-', lw=3, dashes=[4,1], color='r', label="Benford's Law")
+
+    legend = ax.legend(loc='upper right', title=legend_title, fontsize=11)
+    pyplot.setp(legend.get_title(), fontsize=12)
 
     return fig
 
 
 
-
-
-
-
+if __name__ == '__main__':
+    main()
 
