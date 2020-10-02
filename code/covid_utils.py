@@ -28,6 +28,13 @@ INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
 
 
+def add_death_per_100k_column(df):
+    '''
+    Description
+    -----------
+        Adds a column for the number of deaths per 100k population
+    '''
+
 
 def benford_probabilities(n=10):
     '''

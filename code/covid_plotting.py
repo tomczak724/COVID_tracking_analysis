@@ -42,9 +42,6 @@ def main():
 
 
 
-
-
-
 def plot_usa_summary(days_smooth=7):
     '''
     Generates a summary plot of positive cases and deaths for the USA
@@ -169,6 +166,7 @@ def plot_benford_breakdown(df_input, column='positiveIncrease', data_label='# ne
     pyplot.setp(legend.get_title(), fontsize=12)
 
     return fig
+
 
 
 
