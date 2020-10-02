@@ -24,16 +24,52 @@ if not os.path.exists(fname_info_states):
     subprocess.call(cmd, shell=True)
     os.rename('info.json', fname_info_states)
 
+DF_POPULATION = pandas.read_csv('../data/populations.csv')
+
 INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
+DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_POPULATION, on='name')
+
+add_death_per_100k = input('\nCalculate deaths per 100k for all states? [y/N] ')
+if add_death_per_100k.lower() in ('y', 'yes'):
+    for idx, row in utils.DF_INFO_STATES.iterrows():
+        sys.stdout.write('\rCalculating for %s (%i%%)' % (row['state'], (idx+1.)*100/len(utils.DF_INFO_STATES)))
+        df = utils.load_df_state(row['state'])
+        utils.DF_INFO_STATES.loc[idx, 'death_per_100k'] = df.iloc[-1]['death_per_100k']
 
 
-def add_death_per_100k_column(df):
+
+def get_rate_per_100k(data, name):
     '''
     Description
     -----------
-        Adds a column for the number of deaths per 100k population
+        Returns the per-capita (100k population) rate of the 
+        input data for the specified state / territory / USA
+
+    Parameters
+    ----------
+        data : array-like
+            Data to normalize (e.g. deaths)
+
+        name : str
+            Either "US" or name of state
     '''
+
+    if name.upper() in ('US' 'USA'):
+        pop = DF_POPULATION['population_20190701'].sum()
+
+    elif name.upper() in tuple(DF_INFO_STATES['state']):
+        pop = DF_INFO_STATES.query('state=="%s"'%name.upper()).iloc[0]['population_20190701']
+
+    elif name.capitalize() in tuple(DF_INFO_STATES['name']):
+        pop = DF_INFO_STATES.query('name=="%s"'%name.capitalize()).iloc[0]['population_20190701']
+
+    else:
+        raise IOError('Unknown name provided: %s' % name)
+
+    death_per_100k = data * 10.**5 / pop
+
+    return death_per_100k
 
 
 def benford_probabilities(n=10):
@@ -67,6 +103,9 @@ def load_df_us(remove_negative_cases_deaths=True):
         for col in ['positive', 'negative', 'death', 'positiveIncrease', 'negativeIncrease', 'deathIncrease']:
             ii_neg = df_data[col] < 0
             df_data.loc[ii_neg, col] = numpy.nan
+
+    ###  adding column for death per 100k
+    df_data['death_per_100k'] = get_rate_per_100k(df_data['death'], 'US')
 
     return df_data
 
@@ -109,6 +148,9 @@ def load_df_state(state, remove_negative_cases_deaths=True):
         for col in ['positive', 'negative', 'death', 'positiveIncrease', 'negativeIncrease', 'deathIncrease']:
             ii_neg = df_data[col] < 0
             df_data.loc[ii_neg, col] = numpy.nan
+
+    ###  adding column for death per 100k
+    df_data['death_per_100k'] = get_rate_per_100k(df_data['death'], state)
 
     return df_data
 
