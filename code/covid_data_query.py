@@ -40,6 +40,12 @@ def main():
     ###  query data from all states up to present day
     choice_run_dl_states = input('\nDownload latest data for states? [y/N] ')
     if choice_run_dl_states.lower() in ['yes', 'y']:
+
+        ###  checking it state directory exists, create one if not
+        dir_states = os.path.join(utils.DATA_PATH, 'states')
+        if not os.path.exists(dir_states):
+            os.mkdir(dir_states)
+
         for d in DATES:
 
             for s in utils.INFO_STATES:
