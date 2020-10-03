@@ -25,10 +25,12 @@ if not os.path.exists(fname_info_states):
     os.rename('info.json', fname_info_states)
 
 DF_POPULATION = pandas.read_csv('../data/populations.csv')
+DF_AREA = pandas.read_csv('../data/areas.csv')
 
 INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
 DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_POPULATION, on='name')
+DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_AREA, on='name')
 
 
 
