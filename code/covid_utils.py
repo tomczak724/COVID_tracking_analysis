@@ -30,13 +30,6 @@ INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
 DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_POPULATION, on='name')
 
-add_death_per_100k = input('\nCalculate deaths per 100k for all states? [y/N] ')
-if add_death_per_100k.lower() in ('y', 'yes'):
-    for idx, row in utils.DF_INFO_STATES.iterrows():
-        sys.stdout.write('\rCalculating for %s (%i%%)' % (row['state'], (idx+1.)*100/len(utils.DF_INFO_STATES)))
-        df = utils.load_df_state(row['state'])
-        utils.DF_INFO_STATES.loc[idx, 'death_per_100k'] = df.iloc[-1]['death_per_100k']
-
 
 
 def get_rate_per_100k(data, name):
@@ -177,6 +170,13 @@ def load_df_all_states(remove_negative_cases_deaths=True, verbose=True):
 
 
 
+add_death_per_100k = input('\nCalculate deaths per 100k for all states? [y/N] ')
+if add_death_per_100k.lower() in ('y', 'yes'):
+    for idx, row in DF_INFO_STATES.iterrows():
+        sys.stdout.write('\rCalculating for %s (%i%%)' % (row['state'], (idx+1.)*100/len(DF_INFO_STATES)))
+        df = load_df_state(row['state'])
+        DF_INFO_STATES.loc[idx, 'death_per_100k'] = df.iloc[-1]['death_per_100k']
+    print('')
 
 
 
