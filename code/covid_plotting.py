@@ -72,7 +72,7 @@ def plot_usa_summary(days_smooth=7):
 
     ###  formatting y-axis of new-cases plot
     yticks = [ytick.get_text() for ytick in ax1.yaxis.get_ticklabels()]
-    yticks_new = [ytick.replace('0000','0k') for ytick in yticks]
+    yticks_new = [ytick[::-1].replace('000','k')[::-1] for ytick in yticks]
     ax1.yaxis.set_ticklabels(yticks_new)
 
     ###  references
@@ -113,7 +113,7 @@ def plot_state_summary(state, days_smooth=7, format_yaxis=True):
     ###  formatting y-axis of new-cases plot
     if format_yaxis == True:
         yticks = [ytick.get_text() for ytick in ax1.yaxis.get_ticklabels()]
-        yticks_new = [ytick.replace('0000','0k') for ytick in yticks]
+        yticks_new = [ytick[::-1].replace('000','k')[::-1] for ytick in yticks]
         ax1.yaxis.set_ticklabels(yticks_new)
 
     ###  references
