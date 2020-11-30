@@ -26,10 +26,16 @@ if not os.path.exists(fname_info_states):
 
 DF_POPULATION = pandas.read_csv('../data/populations.csv')
 DF_AREA = pandas.read_csv('../data/areas.csv')
+DF_ELECTION_RESULTS_2016 = pandas.read_csv('../data/election_results_2016.csv')
 
 INFO_STATES = json.load(open(fname_info_states, 'r'))
 DF_INFO_STATES = pandas.DataFrame(INFO_STATES)
+
+
+###  adding population data from Wikipedia (https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States_by_population)
 DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_POPULATION, on='name')
+
+###  adding land area data from Wikipedia (https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_area)
 DF_INFO_STATES = pandas.merge(DF_INFO_STATES, DF_AREA, on='name')
 
 
@@ -67,6 +73,32 @@ def get_rate_per_100k(data, name):
     return death_per_100k
 
 
+def get_election2016_dem_ratio():
+    '''
+    Description
+    -----------
+        Returns the fraction of the popular vote of the 2016 USA presidential election that
+        went to the Democratic party. Intended to approximate Dem. / Rep. "lean"
+
+    Source
+    ------
+        https://en.wikipedia.org/wiki/2016_United_States_presidential_election
+    '''
+
+    DF_ELECTION_RESULTS_2016['dem_ratio'] = DF_ELECTION_RESULTS_2016['votes_dem'] / (DF_ELECTION_RESULTS_2016['votes_dem'] + DF_ELECTION_RESULTS_2016['votes_rep'])
+
+    ###  normalizing results to range (0-1)
+    DF_ELECTION_RESULTS_2016['dem_ratio'] -= 0.5
+    ii_lo = DF_ELECTION_RESULTS_2016['dem_ratio'] < 0
+    ii_hi = DF_ELECTION_RESULTS_2016['dem_ratio'] >= 0
+    DF_ELECTION_RESULTS_2016.loc[ii_lo, 'dem_ratio'] /= -DF_ELECTION_RESULTS_2016['dem_ratio'].min()
+    DF_ELECTION_RESULTS_2016.loc[ii_hi, 'dem_ratio'] /= DF_ELECTION_RESULTS_2016['dem_ratio'].max()
+    DF_ELECTION_RESULTS_2016['dem_ratio'] /= 2
+    DF_ELECTION_RESULTS_2016['dem_ratio'] += 0.5
+
+    return DF_ELECTION_RESULTS_2016[['state', 'dem_ratio']]
+
+
 def benford_probabilities(n=10):
     '''
     Returns the Benford probabilities for each leading digit of the given base
@@ -89,8 +121,8 @@ def load_df_us(remove_negative_cases_deaths=True):
     df_data = pandas.DataFrame(data).dropna(subset=['date'])
 
     df_data['date'] = pandas.DatetimeIndex(df_data['date'].apply(lambda x: '%s-%s-%s' % (str(x)[0:4], str(x)[4:6], str(x)[6:8])))
-    df_data['dateChecked'] = pandas.DatetimeIndex(df_data['dateChecked'])
-    df_data['lastModified'] = pandas.DatetimeIndex(df_data['lastModified'])
+    #df_data['dateChecked'] = pandas.DatetimeIndex(df_data['dateChecked'])
+    #df_data['lastModified'] = pandas.DatetimeIndex(df_data['lastModified'])
 
     df_data = df_data.sort_values(by=['date']).reset_index(drop=True)
 
@@ -133,9 +165,9 @@ def load_df_state(state, remove_negative_cases_deaths=True):
     df_data = pandas.DataFrame(data).dropna(subset=['date'])
 
     df_data['date'] = pandas.DatetimeIndex(df_data['date'].apply(lambda x: '%s-%s-%s' % (str(x)[0:4], str(x)[4:6], str(x)[6:8])))
-    df_data['dateModified'] = pandas.DatetimeIndex(df_data['dateModified'])
-    df_data['lastUpdateEt'] = pandas.DatetimeIndex(df_data['lastUpdateEt'])
-    df_data['dateChecked'] = pandas.DatetimeIndex(df_data['dateChecked'])
+    #df_data['dateModified'] = pandas.DatetimeIndex(df_data['dateModified'])
+    #df_data['lastUpdateEt'] = pandas.DatetimeIndex(df_data['lastUpdateEt'])
+    #df_data['dateChecked'] = pandas.DatetimeIndex(df_data['dateChecked'])
 
     df_data = df_data.sort_values(by=['date']).reset_index(drop=True)
 
@@ -172,6 +204,13 @@ def load_df_all_states(remove_negative_cases_deaths=True, verbose=True):
 
 
 
+
+
+###  adding USA presidentaial 2016 popular vote results
+DF_INFO_STATES = pandas.merge(DF_INFO_STATES, get_election2016_dem_ratio(), on='state')
+
+
+###  adding deaths per 100k population
 add_death_per_100k = input('\nCalculate deaths per 100k for all states? [y/N] ')
 if add_death_per_100k.lower() in ('y', 'yes'):
     for idx, row in DF_INFO_STATES.iterrows():
@@ -179,6 +218,4 @@ if add_death_per_100k.lower() in ('y', 'yes'):
         df = load_df_state(row['state'])
         DF_INFO_STATES.loc[idx, 'death_per_100k'] = df.iloc[-1]['death_per_100k']
     print('')
-
-
 
